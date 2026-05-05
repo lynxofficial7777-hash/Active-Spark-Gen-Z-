@@ -85,8 +85,9 @@ class RepCounter(private val exerciseType: ExerciseType) {
             abs(landmarks[15].x() - landmarks[16].x()) / shoulderW
         }
         ExerciseType.SIT_UP -> {
-            // Hip-shoulder-knee angle: small = sitting up, large = lying down
-            calcAngle(landmarks[23], landmarks[11], landmarks[25])
+            // Angle at HIP (shoulder→hip→knee): small = sitting up, large = lying flat
+            // FIX: middle arg is the vertex; was landmarks[11] (shoulder), must be landmarks[23] (hip)
+            calcAngle(landmarks[11], landmarks[23], landmarks[25])
         }
         ExerciseType.BURPEE -> {
             // Use hip Y — burpee goes floor → standing; hip drops when on ground
@@ -109,16 +110,17 @@ class RepCounter(private val exerciseType: ExerciseType) {
         return when (exerciseType) {
 
             // ── Angle exercises: small angle = DOWN, large angle = UP ──────────
-            ExerciseType.PUSH_UP -> angleStateMachine(m, downAngle = 100f, upAngle = 155f)
-            ExerciseType.SQUAT   -> angleStateMachine(m, downAngle = 110f, upAngle = 155f)
-            ExerciseType.LUNGE   -> angleStateMachine(m, downAngle = 110f, upAngle = 155f)
+            // upAngle lowered 155→150 so a partial extension still counts
+            ExerciseType.PUSH_UP -> angleStateMachine(m, downAngle = 100f, upAngle = 150f)
+            ExerciseType.SQUAT   -> angleStateMachine(m, downAngle = 110f, upAngle = 150f)
+            ExerciseType.LUNGE   -> angleStateMachine(m, downAngle = 110f, upAngle = 150f)
 
-            // ── Sit-up: angle decreases when torso rises ──────────────────────
+            // ── Sit-up: angle at hip decreases when torso rises ───────────────
             ExerciseType.SIT_UP  -> reverseAngleStateMachine(m, sitUpAngle = 80f, lyingAngle = 140f)
 
-            // ── Spread ratio: > 2.0 = out, < 0.8 = in ────────────────────────
+            // ── Spread ratio: outThresh 2.0→1.6 (kids may not fully extend arms) ──
             ExerciseType.JUMPING_JACK,
-            ExerciseType.STAR_JUMP -> spreadStateMachine(m, outThresh = 2.0f, inThresh = 0.8f)
+            ExerciseType.STAR_JUMP -> spreadStateMachine(m, outThresh = 1.6f, inThresh = 0.8f)
 
             // ── Burpee: hip Y > 0.72 = on floor, < 0.50 = standing ───────────
             ExerciseType.BURPEE  -> yPositionStateMachine(m, downY = 0.72f, upY = 0.50f)

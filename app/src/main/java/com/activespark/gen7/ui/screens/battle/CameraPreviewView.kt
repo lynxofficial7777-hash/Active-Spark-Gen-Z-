@@ -152,6 +152,10 @@ fun CameraPreviewView(
         }
     }
 
+    // FIX: Guard flag — camera must only be bound once, not on every recomposition.
+    // Using a plain array (not State) so reading it never triggers recomposition.
+    val isBound = remember { arrayOf(false) }
+
     Box(modifier = modifier) {
         // Camera preview surface
         AndroidView(
@@ -163,6 +167,9 @@ fun CameraPreviewView(
             },
             modifier = Modifier.fillMaxSize(),
             update = { previewView ->
+                // Skip if already bound — prevents camera restart on every rep-count recomposition
+                if (isBound[0]) return@AndroidView
+
                 val context = previewView.context
                 val executor = executorRef.value ?: Executors.newSingleThreadExecutor()
                     .also { executorRef.value = it }
@@ -228,6 +235,7 @@ fun CameraPreviewView(
                             preview,
                             imageAnalyzer
                         )
+                        isBound[0] = true   // mark bound so update{} skips on future recompositions
                     } catch (e: Exception) {
                         android.util.Log.e("CameraPreview", "Camera bind failed: ${e.message}")
                     }
