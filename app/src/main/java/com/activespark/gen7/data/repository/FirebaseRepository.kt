@@ -3,6 +3,7 @@ package com.activespark.gen7.data.repository
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.database.FirebaseDatabase
+import com.activespark.gen7.data.models.AvatarConfig
 import com.activespark.gen7.data.models.Challenge
 import com.activespark.gen7.data.models.Difficulty
 import com.activespark.gen7.data.models.ExerciseType
