@@ -29,6 +29,11 @@ sealed class Screen(val route: String) {
         fun createRoute(challengeId: String) = "matchmaking/$challengeId"
     }
 
+    // ─── Solo Practice ───────────────────────────────────────────────────
+    object SoloBattle : Screen("solo/{challengeId}") {
+        fun createRoute(challengeId: String) = "solo/$challengeId"
+    }
+
     // ─── Battle ─────────────────────────────────────────────────────────
     object Battle : Screen("battle/{matchId}") {
         fun createRoute(matchId: String) = "battle/$matchId"

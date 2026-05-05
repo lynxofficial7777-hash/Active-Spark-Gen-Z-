@@ -20,6 +20,7 @@ import com.activespark.gen7.ui.screens.onboarding.OnboardingScreen
 import com.activespark.gen7.ui.screens.parentdashboard.ParentDashboardScreen
 import com.activespark.gen7.ui.screens.profile.ProfileScreen
 import com.activespark.gen7.ui.screens.avatar.AvatarCustomizationScreen
+import com.activespark.gen7.ui.screens.solo.SoloBattleScreen
 import com.activespark.gen7.ui.screens.results.ResultsScreen
 import com.activespark.gen7.ui.screens.splash.SplashScreen
 
@@ -122,6 +123,19 @@ fun AppNavGraph(
         ) { backStackEntry ->
             val challengeId = backStackEntry.arguments?.getString("challengeId") ?: ""
             MatchmakingScreen(navController = navController, challengeId = challengeId)
+        }
+
+        // ─── Solo Practice ────────────────────────────────────────────
+        composable(
+            route = Screen.SoloBattle.route,
+            arguments = listOf(navArgument("challengeId") { type = NavType.StringType }),
+            enterTransition = {
+                scaleIn(initialScale = 0.92f, animationSpec = tween(400)) +
+                        fadeIn(animationSpec = tween(400))
+            }
+        ) { backStackEntry ->
+            val challengeId = backStackEntry.arguments?.getString("challengeId") ?: ""
+            SoloBattleScreen(navController = navController, challengeId = challengeId)
         }
 
         // ─── Battle ───────────────────────────────────────────────────

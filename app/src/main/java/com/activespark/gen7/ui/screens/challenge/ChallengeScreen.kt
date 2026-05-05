@@ -167,6 +167,39 @@ fun ChallengeScreen(
                         )
                     )
                 }
+
+                Spacer(Modifier.height(12.dp))
+
+                // ── Solo Practice button ────────────────────────────────────
+                OutlinedButton(
+                    onClick = {
+                        navController.navigate(
+                            Screen.SoloBattle.createRoute(challenge.challengeId)
+                        )
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(54.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = NeonGreen),
+                    border = androidx.compose.foundation.BorderStroke(1.5.dp, NeonGreen),
+                    shape = RoundedCornerShape(16.dp)
+                ) {
+                    Text(
+                        "🏃 SOLO PRACTICE",
+                        style = ActiveSparkTypography.titleSmall.copy(
+                            color = NeonGreen,
+                            fontWeight = FontWeight.ExtraBold
+                        )
+                    )
+                }
+
+                Spacer(Modifier.height(8.dp))
+
+                Text(
+                    "Practice alone · Earn XP · No waiting",
+                    style = ActiveSparkTypography.bodySmall.copy(color = TextTertiary),
+                    textAlign = TextAlign.Center
+                )
             }
         } ?: Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             CircularProgressIndicator(color = NeonCyan)

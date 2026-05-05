@@ -202,7 +202,7 @@ fun BattleScreen(
 // ─── Camera Setup Overlay ─────────────────────────────────────────────────────
 
 @Composable
-private fun CameraSetupOverlay(exerciseType: ExerciseType, onReady: () -> Unit) {
+internal fun CameraSetupOverlay(exerciseType: ExerciseType, onReady: () -> Unit) {
     val isPushUp = exerciseType == ExerciseType.PUSH_UP
 
     Box(
