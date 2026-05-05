@@ -203,7 +203,22 @@ fun BattleScreen(
 
 @Composable
 internal fun CameraSetupOverlay(exerciseType: ExerciseType, onReady: () -> Unit) {
-    val isPushUp = exerciseType == ExerciseType.PUSH_UP
+    val isSideView = exerciseType == ExerciseType.PUSH_UP || exerciseType == ExerciseType.PLANK
+
+    // Content varies by camera placement needed
+    val diagram  = if (isSideView) "📱  ←  🏋️" else "🧍  →  📱"
+    val placement = if (isSideView)
+        "Place phone on the floor ~1m to your SIDE, screen facing you"
+    else
+        "Prop phone up FACING you, ~1.5m back — full body must be in frame"
+    val why = if (isSideView)
+        "${exerciseType.displayName} needs a side view to measure joint angles accurately."
+    else
+        "${exerciseType.displayName} uses your front camera — step back so head AND feet are both visible."
+    val tip = if (isSideView)
+        "💡 Lean phone against a wall or water bottle"
+    else
+        "💡 Lean phone against a wall, stack of books, or use a selfie stick"
 
     Box(
         modifier = Modifier
@@ -213,12 +228,12 @@ internal fun CameraSetupOverlay(exerciseType: ExerciseType, onReady: () -> Unit)
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(20.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(32.dp)
         ) {
-            // Exercise name badge
+            // Exercise badge
             Box(
                 modifier = Modifier
                     .background(
@@ -229,7 +244,7 @@ internal fun CameraSetupOverlay(exerciseType: ExerciseType, onReady: () -> Unit)
                     .padding(horizontal = 20.dp, vertical = 8.dp)
             ) {
                 Text(
-                    text = exerciseType.displayName.uppercase(),
+                    exerciseType.displayName.uppercase(),
                     style = ActiveSparkTypography.labelLarge.copy(
                         color = NeonCyan,
                         fontWeight = FontWeight.ExtraBold
@@ -238,59 +253,59 @@ internal fun CameraSetupOverlay(exerciseType: ExerciseType, onReady: () -> Unit)
             }
 
             Text(
-                text = "📱 Phone Placement",
+                "📱 Phone Placement",
                 style = ActiveSparkTypography.headlineMedium.copy(
                     color = TextPrimary,
                     fontWeight = FontWeight.ExtraBold
                 )
             )
 
-            // Diagram box
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(160.dp)
-                    .background(SurfaceVariant, RoundedCornerShape(20.dp))
-                    .border(1.dp, NeonCyan.copy(0.4f), RoundedCornerShape(20.dp)),
-                contentAlignment = Alignment.Center
+            // Diagram card
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = SurfaceVariant),
+                shape = RoundedCornerShape(20.dp)
             ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    // ASCII-style side view diagram
+                Column(
+                    modifier = Modifier.padding(20.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Text(diagram, fontSize = 48.sp, textAlign = TextAlign.Center)
                     Text(
-                        text = if (isPushUp) "📱  ←  🏃 (side view)" else "📱  ←  🧍 (side view)",
-                        style = ActiveSparkTypography.bodyLarge.copy(color = NeonCyan),
-                        textAlign = TextAlign.Center
-                    )
-                    Spacer(Modifier.height(12.dp))
-                    Text(
-                        text = if (isPushUp)
-                            "Place phone on the floor\n~1 metre to your side"
-                        else
-                            "Place phone at waist height\n~1 metre to your side",
-                        style = ActiveSparkTypography.bodyMedium.copy(color = TextSecondary),
+                        placement,
+                        style = ActiveSparkTypography.bodyMedium.copy(
+                            color = NeonCyan,
+                            fontWeight = FontWeight.Bold
+                        ),
                         textAlign = TextAlign.Center
                     )
                 }
             }
 
-            // Why text
+            // Why + tip
             Text(
-                text = if (isPushUp)
-                    "Push-ups need a side view so the camera can measure your elbow angle accurately."
-                else
-                    "Plank needs a side view so the camera can check your body is straight.",
-                style = ActiveSparkTypography.bodySmall.copy(color = TextTertiary),
+                why,
+                style = ActiveSparkTypography.bodySmall.copy(color = TextSecondary),
                 textAlign = TextAlign.Center
             )
+            Surface(
+                color = NeonYellow.copy(0.1f),
+                shape = RoundedCornerShape(10.dp)
+            ) {
+                Text(
+                    tip,
+                    style = ActiveSparkTypography.bodySmall.copy(color = NeonYellow),
+                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
+                    textAlign = TextAlign.Center
+                )
+            }
 
             Spacer(Modifier.height(4.dp))
 
-            // Ready button
             Button(
                 onClick = onReady,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp),
+                modifier = Modifier.fillMaxWidth().height(56.dp),
                 shape = RoundedCornerShape(16.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = NeonCyan)
             ) {

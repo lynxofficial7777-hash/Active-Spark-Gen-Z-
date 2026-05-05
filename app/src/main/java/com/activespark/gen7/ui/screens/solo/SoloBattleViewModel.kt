@@ -50,9 +50,6 @@ class SoloBattleViewModel @Inject constructor(
     fun initSoloBattle(challengeId: String) {
         viewModelScope.launch {
             val challenge = repository.getChallenge(challengeId).getOrNull() ?: return@launch
-            val needsSetup = challenge.exerciseType in
-                    setOf(ExerciseType.PUSH_UP, ExerciseType.PLANK)
-
             _uiState.update {
                 it.copy(
                     challengeName    = challenge.name,
@@ -62,10 +59,9 @@ class SoloBattleViewModel @Inject constructor(
                     secondsRemaining = challenge.durationSeconds,
                     xpEarned         = challenge.xpReward,   // base XP (no opponent bonus)
                     challengeId      = challengeId,
-                    showCameraSetup  = needsSetup
+                    showCameraSetup  = true   // always show placement guide in solo mode
                 )
             }
-            if (!needsSetup) startCountdown()
         }
     }
 
