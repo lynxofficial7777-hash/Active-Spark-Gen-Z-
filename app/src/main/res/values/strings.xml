@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Active Spark Gen 7</string>
+    <string name="app_tagline">Fitness. Battle. Glory.</string>
+
+    <!-- Auth -->
+    <string name="sign_in">Sign In</string>
+    <string name="register">Register</string>
+    <string name="email_hint">Email address</string>
+    <string name="password_hint">Password</string>
+    <string name="forgot_password">Forgot Password?</string>
+
+    <!-- Home -->
+    <string name="quick_battle">Quick Battle</string>
+    <string name="daily_challenge">Daily Challenge</string>
+    <string name="find_opponent">Find Opponent</string>
+
+    <!-- Battle -->
+    <string name="reps">Reps</string>
+    <string name="form_accuracy">Form Accuracy</string>
+    <string name="time_remaining">Time Remaining</string>
+    <string name="battle_countdown">Get Ready!</string>
+
+    <!-- Matchmaking -->
+    <string name="searching_opponent">Searching for opponent…</string>
+    <string name="cancel_search">Cancel</string>
+
+    <!-- Results -->
+    <string name="victory">Victory!</string>
+    <string name="defeated">Defeated!</string>
+    <string name="draw">Draw!</string>
+    <string name="xp_earned">XP Earned</string>
+    <string name="play_again">Play Again</string>
+    <string name="home">Home</string>
+
+    <!-- Leaderboard -->
+    <string name="leaderboard">Leaderboard</string>
+    <string name="rank">Rank</string>
+
+    <!-- Parent Dashboard -->
+    <string name="parent_dashboard">Parent Dashboard</string>
+    <string name="daily_limit">Daily Screen Time Limit</string>
+    <string name="allow_online">Allow Online Battles</string>
+    <string name="allow_chat">Allow Chat</string>
+
+    <!-- Errors -->
+    <string name="error_network">Network error. Please check your connection.</string>
+    <string name="error_auth">Authentication failed. Please try again.</string>
+    <string name="error_generic">Something went wrong. Please try again.</string>
+
+    <!-- Accessibility -->
+    <string name="cd_back">Go back</string>
+    <string name="cd_profile">View profile</string>
+    <string name="cd_notifications">Notifications</string>
+    <string name="cd_camera">Camera view for pose detection</string>
+</resources>

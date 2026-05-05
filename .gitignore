@@ -1,0 +1,60 @@
+# ─── Sensitive / local files ─────────────────────────────────────────────────
+# NEVER commit these — they contain API keys, SDK paths, and signing secrets
+local.properties
+app/google-services.json
+google-services.json
+*.keystore
+*.jks
+keystore.properties
+secrets.properties
+.env
+.env.*
+
+# ─── Android build output ────────────────────────────────────────────────────
+build/
+app/build/
+**/build/
+*.apk
+*.aab
+*.ap_
+
+# ─── Gradle internals ────────────────────────────────────────────────────────
+.gradle/
+gradle-app.setting
+!gradle-wrapper.jar
+!gradle/wrapper/gradle-wrapper.jar
+!gradle/wrapper/gradle-wrapper.properties
+.gradletasknamecache
+
+# ─── Android Studio / IntelliJ ───────────────────────────────────────────────
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+captures/
+.externalNativeBuild/
+.cxx/
+cmake-build-*/
+
+# ─── OS junk ─────────────────────────────────────────────────────────────────
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V8
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# ─── Cloud Functions ─────────────────────────────────────────────────────────
+functions/node_modules/
+functions/lib/
+functions/.env
+
+# ─── Firebase emulator ───────────────────────────────────────────────────────
+.firebase/
+firebase-debug.log
+firestore-debug.log
+database-debug.log
+ui-debug.log

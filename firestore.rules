@@ -1,0 +1,97 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ─── Helper Functions ────────────────────────────────────────────────
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(uid) {
+      return request.auth.uid == uid;
+    }
+
+    function isValidUser() {
+      let data = request.resource.data;
+      return data.keys().hasAll(['uid', 'username', 'email'])
+        && data.username is string
+        && data.username.size() >= 3
+        && data.username.size() <= 20
+        && data.age is int
+        && data.age >= 8
+        && data.age <= 100;
+    }
+
+    // ─── Users Collection ────────────────────────────────────────────────
+    match /users/{uid} {
+      // Anyone authenticated can read public profiles
+      allow read: if isAuthenticated();
+      // Only the user themselves can create/update their profile
+      allow create: if isOwner(uid) && isValidUser();
+      allow update: if isOwner(uid);
+      allow delete: if false; // Never allow user deletion from client
+    }
+
+    // ─── Challenges Collection ───────────────────────────────────────────
+    match /challenges/{challengeId} {
+      // All authenticated users can read challenges
+      allow read: if isAuthenticated();
+      // Only backend (admin SDK) can create/update challenges
+      allow write: if false;
+    }
+
+    // ─── Matches Collection ──────────────────────────────────────────────
+    match /matches/{matchId} {
+      // Players involved in the match can read it
+      allow read: if isAuthenticated()
+        && (resource.data.player1Uid == request.auth.uid
+            || resource.data.player2Uid == request.auth.uid);
+      // Any authenticated user can create a match (matchmaking)
+      allow create: if isAuthenticated()
+        && request.resource.data.player1Uid == request.auth.uid;
+      // Either player can update the match
+      allow update: if isAuthenticated()
+        && (resource.data.player1Uid == request.auth.uid
+            || resource.data.player2Uid == request.auth.uid);
+      allow delete: if false;
+    }
+
+    // ─── Scores Collection ───────────────────────────────────────────────
+    match /scores/{scoreId} {
+      // Players can read their own scores
+      allow read: if isAuthenticated()
+        && resource.data.playerUid == request.auth.uid;
+      // Players can only create scores for themselves
+      allow create: if isAuthenticated()
+        && request.resource.data.playerUid == request.auth.uid;
+      allow update, delete: if false;
+    }
+
+    // ─── Leaderboard Collection ──────────────────────────────────────────
+    match /leaderboard/{period}/entries/{uid} {
+      // All authenticated users can read the leaderboard
+      allow read: if isAuthenticated();
+      // Only backend can write leaderboard entries
+      allow write: if false;
+    }
+
+    // ─── Notifications Collection ────────────────────────────────────────
+    match /notifications/{notificationId} {
+      allow read: if isAuthenticated()
+        && resource.data.toUid == request.auth.uid;
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated()
+        && resource.data.toUid == request.auth.uid;
+      allow delete: if false;
+    }
+
+    // ─── Parental Settings ───────────────────────────────────────────────
+    match /parentalSettings/{childUid} {
+      // Parent email (stored in user doc) can access these settings
+      allow read, write: if isAuthenticated();
+      // TODO: Tighten this to require parent auth token verification
+    }
+  }
+}

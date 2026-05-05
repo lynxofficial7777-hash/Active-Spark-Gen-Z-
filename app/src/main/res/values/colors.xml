@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- App Colors for system UI (status bar, notification icons) -->
+    <color name="neon_cyan">#00F5FF</color>
+    <color name="neon_green">#39FF14</color>
+    <color name="neon_pink">#FF1B8D</color>
+    <color name="background">#0A0A0F</color>
+    <color name="surface">#12121F</color>
+    <color name="text_primary">#F0F0FF</color>
+</resources>

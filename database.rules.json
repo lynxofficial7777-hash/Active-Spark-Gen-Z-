@@ -1,0 +1,81 @@
+{
+  "rules": {
+
+    "matchmaking_queue": {
+      ".read": "auth != null",
+      ".write": "auth != null",
+      "$uid": {
+        ".validate": "newData.hasChildren(['uid', 'rank', 'joinedAt'])"
+      }
+    },
+
+    "matches": {
+      "$matchId": {
+        ".read": "auth != null",
+        ".write": "auth != null"
+      }
+    },
+
+    "active_matches": {
+      "$matchId": {
+        ".read": "auth != null",
+        ".write": "auth != null",
+        ".validate": "newData.hasChildren(['matchId'])"
+      }
+    },
+
+    "users": {
+      "$uid": {
+        ".read": "auth != null",
+        ".write": "auth.uid === $uid",
+        "avatarConfig": {
+          ".write": "auth.uid === $uid"
+        }
+      }
+    },
+
+    "scores": {
+      ".read": "auth != null",
+      "$scoreId": {
+        ".write": "auth != null"
+      }
+    },
+
+    "leaderboard": {
+      ".read": "auth != null",
+      "$period": {
+        "$uid": {
+          // Players write their own entry client-side; Cloud Function writes all
+          ".write": "auth != null"
+        }
+      }
+    },
+
+    "leaderboard_archive": {
+      // Only Cloud Functions (server-side admin SDK) write here.
+      // Client apps can read past results for the history screen.
+      ".read": "auth != null",
+      ".write": false
+    },
+
+    "parental_settings": {
+      "$childUid": {
+        ".read": "auth != null",
+        ".write": "auth.uid === $childUid || auth != null"
+      }
+    },
+
+    "challenges": {
+      ".read": "auth != null",
+      ".write": false
+    },
+
+    "user_presence": {
+      "$uid": {
+        ".read": "auth != null",
+        ".write": "auth.uid === $uid"
+      }
+    }
+
+  }
+}
