@@ -63,6 +63,11 @@ android {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
+        // Allow MediaPipe .so libs (not yet 16 KB aligned) to install on API 36+ devices.
+        // The system extracts and maps them at runtime where alignment is handled by the OS.
+        jniLibs {
+            useLegacyPackaging = true
+        }
     }
 }
 
