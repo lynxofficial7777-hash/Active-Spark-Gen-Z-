@@ -99,18 +99,22 @@ class RepCounter(private val exerciseType: ExerciseType) {
             (l + r) / 2f
         }
         ExerciseType.JUMPING_JACK, ExerciseType.STAR_JUMP -> {
-            // Wrist spread ratio relative to shoulder width
-            val shoulderW = abs(landmarks[11].x() - landmarks[12].x()).coerceAtLeast(0.01f)
-            abs(landmarks[15].x() - landmarks[16].x()) / shoulderW
+            // Wrists ABOVE shoulders = arms up. Measure how far wrists are above shoulders.
+            // Positive = wrists above shoulder level (arms raised), negative = arms down.
+            // Works reliably with front camera — no spread ratio needed.
+            val leftRaise  = landmarks[11].y() - landmarks[15].y()  // positive when wrist above shoulder
+            val rightRaise = landmarks[12].y() - landmarks[16].y()
+            (leftRaise + rightRaise) / 2f
         }
         ExerciseType.SIT_UP -> {
             // Angle at HIP (shoulder→hip→knee): small = sitting up, large = lying flat
-            // FIX: middle arg is the vertex; was landmarks[11] (shoulder), must be landmarks[23] (hip)
             calcAngle(landmarks[11], landmarks[23], landmarks[25])
         }
         ExerciseType.BURPEE -> {
-            // Use hip Y — burpee goes floor → standing; hip drops when on ground
-            (landmarks[23].y() + landmarks[24].y()) / 2f
+            // Knee angle — squat down then stand up. Works front-facing.
+            val l = calcAngle(landmarks[23], landmarks[25], landmarks[27])
+            val r = calcAngle(landmarks[24], landmarks[26], landmarks[28])
+            (l + r) / 2f
         }
         ExerciseType.LUNGE -> {
             // Front knee angle (pick the more bent knee)
@@ -137,12 +141,12 @@ class RepCounter(private val exerciseType: ExerciseType) {
             // ── Sit-up: angle at hip decreases when torso rises ───────────────
             ExerciseType.SIT_UP  -> reverseAngleStateMachine(m, sitUpAngle = 80f, lyingAngle = 140f)
 
-            // ── Spread ratio: outThresh 2.0→1.6 (kids may not fully extend arms) ──
+            // ── Jumping jack: wrists above shoulders = arms up (> 0.07), arms down (< -0.02) ──
             ExerciseType.JUMPING_JACK,
-            ExerciseType.STAR_JUMP -> spreadStateMachine(m, outThresh = 1.6f, inThresh = 0.8f)
+            ExerciseType.STAR_JUMP -> spreadStateMachine(m, outThresh = 0.07f, inThresh = -0.02f)
 
-            // ── Burpee: hip Y > 0.72 = on floor, < 0.50 = standing ───────────
-            ExerciseType.BURPEE  -> yPositionStateMachine(m, downY = 0.72f, upY = 0.50f)
+            // ── Burpee: now uses knee angle same as squat ─────────────────────
+            ExerciseType.BURPEE  -> angleStateMachine(m, downAngle = 110f, upAngle = 150f)
 
             // ── Dance: small hip-spread change counts a beat ──────────────────
             ExerciseType.DANCE_MOVE -> spreadStateMachine(m, outThresh = 0.15f, inThresh = 0.05f)
