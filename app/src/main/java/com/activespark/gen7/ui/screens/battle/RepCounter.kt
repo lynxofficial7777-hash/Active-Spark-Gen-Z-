@@ -99,12 +99,10 @@ class RepCounter(private val exerciseType: ExerciseType) {
             (l + r) / 2f
         }
         ExerciseType.JUMPING_JACK, ExerciseType.STAR_JUMP -> {
-            // Wrists ABOVE shoulders = arms up. Measure how far wrists are above shoulders.
-            // Positive = wrists above shoulder level (arms raised), negative = arms down.
-            // Works reliably with front camera — no spread ratio needed.
-            val leftRaise  = landmarks[11].y() - landmarks[15].y()  // positive when wrist above shoulder
-            val rightRaise = landmarks[12].y() - landmarks[16].y()
-            (leftRaise + rightRaise) / 2f
+            // Use knee angle (like squat) — jump down and up counts as a rep
+            val l = calcAngle(landmarks[23], landmarks[25], landmarks[27])
+            val r = calcAngle(landmarks[24], landmarks[26], landmarks[28])
+            (l + r) / 2f
         }
         ExerciseType.SIT_UP -> {
             // Angle at HIP (shoulder→hip→knee): small = sitting up, large = lying flat
@@ -141,9 +139,9 @@ class RepCounter(private val exerciseType: ExerciseType) {
             // ── Sit-up: angle at hip decreases when torso rises ───────────────
             ExerciseType.SIT_UP  -> reverseAngleStateMachine(m, sitUpAngle = 80f, lyingAngle = 140f)
 
-            // ── Jumping jack: wrists above shoulders = arms up (> 0.07), arms down (< -0.02) ──
+            // ── Jumping jack / Star jump: bend knees and jump = 1 rep ───────
             ExerciseType.JUMPING_JACK,
-            ExerciseType.STAR_JUMP -> spreadStateMachine(m, outThresh = 0.07f, inThresh = -0.02f)
+            ExerciseType.STAR_JUMP -> angleStateMachine(m, downAngle = 120f, upAngle = 150f)
 
             // ── Burpee: now uses knee angle same as squat ─────────────────────
             ExerciseType.BURPEE  -> angleStateMachine(m, downAngle = 110f, upAngle = 150f)
