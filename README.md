@@ -1,114 +1,171 @@
-# ⚡ ACTIVE SPARK GEN 7
+# ⚡ Active Spark Gen 7 — AI Fitness Battle App
 
-> **Futuristic Fitness Battle App for Kids (Ages 8–16)**  
-> Built with Kotlin · Jetpack Compose · Firebase · MediaPipe
+<p align="center">
+  <img src="https://img.shields.io/badge/Platform-Android-green?style=for-the-badge&logo=android" />
+  <img src="https://img.shields.io/badge/Language-Kotlin-purple?style=for-the-badge&logo=kotlin" />
+  <img src="https://img.shields.io/badge/UI-Jetpack%20Compose-blue?style=for-the-badge&logo=jetpackcompose" />
+  <img src="https://img.shields.io/badge/AI-MediaPipe-orange?style=for-the-badge" />
+  <img src="https://img.shields.io/badge/Backend-Firebase-yellow?style=for-the-badge&logo=firebase" />
+  <img src="https://img.shields.io/badge/Status-Active-brightgreen?style=for-the-badge" />
+</p>
+
+> **A real-time AI-powered fitness battle app for kids — built entirely in Kotlin with on-device pose detection, live multiplayer battles, and gamified XP progression.**
 
 ---
 
-## 🎮 What Is It?
-Active Spark Gen 7 is a real-time fitness battle game where kids challenge each other to exercise duels. The AI-powered MediaPipe Pose Detection counts reps automatically and judges form accuracy.
+## 🎯 Problem Statement
+
+Kids skip exercise because it's boring and solitary. Active Spark turns fitness into a **competitive game** — children challenge each other to squat, push-up, and jump battles. The AI camera tracks every rep automatically so there's no cheating and no manual counting. **Result: exercise becomes something kids actually want to do.**
+
+---
+
+## ✨ Key Features
+
+- 🦴 **Real-Time Pose Detection** — MediaPipe PoseLandmarker tracking 33 body landmarks at ~30fps, entirely on-device. No cloud, no lag.
+- 🏋️ **10+ Exercise Types** — Push-ups, squats, sit-ups, lunges, burpees, planks, high knees, mountain climbers, jumping jacks, dance moves
+- ⚔️ **Live Multiplayer Battles** — Challenge friends in real-time. Opponent reps sync instantly via Firebase Realtime Database
+- 🎮 **Gamified XP System** — Earn XP for every rep, level up, unlock ranks from Rookie to Legend
+- 🏆 **Leaderboard** — Global rankings updated atomically via Firebase Cloud Functions (no race conditions)
+- 🔔 **Push Notifications** — Battle requests, match results, and reminders via Firebase Cloud Messaging
+- 👤 **Avatar & Profile System** — Customizable player profiles stored in Firebase Firestore
+- 📊 **Form Score** — AI grades your exercise form in real time using joint angle geometry
+- 🔐 **Firebase Authentication** — Secure email/password login and registration
+
+---
+
+## 🔧 Hard Engineering Problems Solved
+
+### 1. CameraX Row-Stride Padding Corruption
+RGBA_8888 frames from CameraX have padding bytes per row on many devices. Direct `copyPixelsFromBuffer()` produced garbled/corrupted images fed to MediaPipe. **Fixed** with row-by-row copy that strips padding bytes before building the bitmap.
+
+### 2. Camera Restarting Every Rep
+`AndroidView.update{}` fires on every Jetpack Compose recomposition — which happens on every state change (every rep count). Camera was calling `unbindAll()` + rebind every single rep. **Fixed** with an `isBound` guard flag that prevents rebinding if camera is already running.
+
+### 3. Matrix Transform Order (Front Camera Mirror)
+Flipping the bitmap after rotation used wrong pivot coordinates → incorrect mirror effect on front camera. **Fixed** by applying flip **before** rotation so the pivot is always relative to the original frame dimensions.
+
+### 4. Leaderboard Race Condition
+Concurrent rep submissions from multiple users caused incorrect leaderboard totals. **Fixed** using Firebase Cloud Function atomic transactions — reads and writes happen in a single server-side transaction, preventing data corruption.
+
+### 5. Android 16 KB Page Alignment (API 36+)
+MediaPipe native `.so` libraries are not 16 KB page-aligned, causing install failure on Android 16 (API 37) devices. **Fixed** with `useLegacyPackaging = true` in Gradle + `extractNativeLibs="true"` in AndroidManifest.
+
+### 6. Rep Counter False Positives
+Rep counter was counting reps without any exercise being performed. **Fixed** with:
+- **Visibility gate** — skips frames where key landmarks (hips, shoulders) are below 50% visibility
+- **800ms cooldown** — prevents rapid consecutive false reps
+- **Angle-based detection** — uses joint angle geometry instead of raw Y-position, adapting to different body sizes and camera distances
 
 ---
 
 ## 🏗️ Architecture
 
 ```
-MVVM + Hilt DI + Clean Architecture
-├── ui/
-│   ├── theme/          ← Neon dark theme (Colors, Type, Shape, Theme)
-│   └── screens/
-│       ├── splash/     ← Auth check → route
-│       ├── onboarding/ ← Feature walkthrough (4 pages)
-│       ├── login/      ← Sign In / Register (tabs)
-│       ├── home/       ← Dashboard + quick battle
-│       ├── profile/    ← Stats, XP, badges, rank
-│       ├── challenge/  ← Exercise detail + rules
-│       ├── matchmaking/← Real-time opponent search (Realtime DB)
-│       ├── battle/     ← Live battle (MediaPipe + timer + sync)
-│       ├── results/    ← Win/Loss/Draw + XP earned
-│       ├── leaderboard/← Period-filtered global rankings
-│       └── parentdashboard/ ← Child safety controls
+app/
 ├── data/
-│   ├── models/         ← User, Match, Challenge, Score, LeaderboardEntry
-│   └── repository/     ← FirebaseRepository (single source of truth)
-├── navigation/
-│   ├── Screen.kt       ← Sealed class route definitions
-│   └── AppNavGraph.kt  ← NavHost with animated transitions
-├── di/
-│   └── FirebaseModule.kt ← Hilt singletons (Auth, Firestore, RTDB, FCM)
-└── services/
-    └── ActiveSparkMessagingService.kt ← FCM push handler
+│   ├── models/          # ExerciseType, User, Match, Score, AvatarConfig
+│   └── repository/      # FirebaseRepository (Firestore + RTDB + Auth)
+├── ui/
+│   ├── screens/
+│   │   ├── splash/      # SplashScreen + SplashViewModel
+│   │   ├── auth/        # Login, Register screens
+│   │   ├── home/        # HomeScreen, Dashboard
+│   │   ├── battle/      # BattleScreen, RepCounter, PoseLandmarkerHelper, CameraPreviewView
+│   │   ├── leaderboard/ # LeaderboardScreen
+│   │   └── profile/     # ProfileScreen, AvatarSelector
+│   └── theme/           # ActiveSparkTheme, Colors, Typography
+├── navigation/          # AppNavGraph, Screen sealed class
+├── services/            # ActiveSparkMessagingService (FCM)
+└── di/                  # Hilt modules
 ```
 
----
-
-## 🎨 Theme Palette
-
-| Token          | Hex       | Usage                    |
-|----------------|-----------|--------------------------|
-| Background     | `#0A0A0F` | App background           |
-| Primary Neon   | `#00F5FF` | Cyan — primary actions   |
-| Secondary Neon | `#39FF14` | Lime — wins, health      |
-| Accent         | `#FF1B8D` | Pink — player 2, danger  |
-| Purple         | `#BF00FF` | Diamond rank             |
+**Pattern:** MVVM + Hilt Dependency Injection + Kotlin Coroutines + StateFlow
 
 ---
 
-## 🔥 Firebase Setup (Required!)
+## 🧠 How Rep Counting Works
 
-1. **Create a Firebase project** at [console.firebase.google.com](https://console.firebase.google.com)
-2. **Add Android app** with package: `com.activespark.gen7`
-3. **Download `google-services.json`** and replace the placeholder at `app/google-services.json`
-4. **Enable**: Authentication (Email/Password), Firestore, Realtime Database, Cloud Messaging
-5. **Deploy rules**: `firebase deploy --only firestore:rules,database`
+The `RepCounter` class uses a **3-state machine** (IDLE → DOWN → UP → IDLE) driven by **joint angle geometry**:
+
+```
+IDLE  →  angle drops below downAngle  →  DOWN
+DOWN  →  angle rises above upAngle    →  UP   (rep detected ✅)
+UP    →  reset                        →  IDLE
+```
+
+Each exercise maps to specific landmark triplets:
+- **Push-up:** shoulder → elbow → wrist angle
+- **Squat / Lunge / Burpee:** hip → knee → ankle angle
+- **Sit-up:** shoulder → hip → knee angle (measured at hip vertex)
+- **Plank:** body straightness (shoulder → hip → ankle > 155°)
+- **High Knee / Mountain Climber:** knee Y position relative to hip
 
 ---
 
-## 📦 Key Dependencies
+## 🛠️ Tech Stack
 
-| Library          | Version    | Purpose                    |
-|------------------|------------|----------------------------|
-| Firebase BOM     | 33.4.0     | Auth, Firestore, RTDB, FCM |
-| MediaPipe Vision | 0.10.14    | Pose detection, rep count  |
-| Hilt Android     | 2.51.1     | Dependency injection       |
-| Compose BOM      | 2024.09.03 | Full Compose UI            |
-| Navigation       | 2.8.2      | Screen routing             |~~~~
-| Lottie           | 6.5.2      | Exercise animations        |
-| Coil             | 2.7.0      | Image loading              |
+| Category | Technology |
+|---|---|
+| Language | Kotlin |
+| UI Framework | Jetpack Compose |
+| Architecture | MVVM + Hilt DI |
+| AI / Pose Detection | MediaPipe PoseLandmarker |
+| Camera | CameraX |
+| Auth | Firebase Authentication |
+| Database | Firebase Firestore + Realtime Database |
+| Backend Logic | Firebase Cloud Functions |
+| Push Notifications | Firebase Cloud Messaging (FCM) |
+| Animations | Lottie |
+| Image Loading | Coil |
+| Networking | Retrofit + OkHttp |
+| Min SDK | 24 (Android 7.0) |
+| Target SDK | 35 (Android 15) |
 
 ---
 
 ## 🚀 Getting Started
 
+### Prerequisites
+- Android Studio Hedgehog or newer
+- Android device or emulator (API 24+)
+- Firebase project with Auth, Firestore, Realtime Database, Cloud Functions, FCM enabled
+
+### Setup
+
+1. **Clone the repo**
 ```bash
-# 1. Clone / open the project in Android Studio Hedgehog+
-# 2. Replace app/google-services.json with real Firebase config
-# 3. Build & Run on API 24+ device or emulator
+git clone https://github.com/lynxofficial7777-hash/Active-Spark-Gen-Z-.git
+cd Active-Spark-Gen-Z-
 ```
 
----
+2. **Add Firebase config**
+   - Download `google-services.json` from your Firebase Console
+   - Place it in `app/google-services.json`
 
-## 📋 Next Steps (After Base Setup)
-
-- [ ] Integrate CameraX + MediaPipe `PoseLandmarkerHelper` in BattleScreen
-- [ ] Add exercise-specific rep counting logic per `ExerciseType`
-- [ ] Add Google Sign-In as auth option
-- [ ] Implement Lottie exercise demonstration animations
-- [ ] Add Orbitron + Exo 2 font TTF files to `res/font/`
-- [ ] Implement Cloud Functions for leaderboard aggregation
-- [ ] Implement push notification deep links for battle invites
-- [ ] Add kid-safe avatar customization screen
+3. **Build & Run**
+   - Open in Android Studio
+   - Click **Run** or press `Shift+F10`
 
 ---
 
-## 🔒 Safety & Privacy
+## 📊 Project Stats
 
-- All users must be 8+ years old (age field validated)
-- Parental consent flag stored on user profile
-- Parent Dashboard controls online battles, chat, and screen time
-- Firestore rules prevent cross-user data access
-- No chat enabled by default
+- **Screens:** 8 (Splash, Auth, Home, Battle, Leaderboard, Profile, Challenge, Results)
+- **Exercise Types:** 10+
+- **Firebase Services Used:** 6 (Auth, Firestore, RTDB, Cloud Functions, FCM, App Distribution)
+- **Architecture:** MVVM, clean separation of data/ui/navigation layers
 
 ---
 
-*Made with ⚡ by Active Spark Team*
+## 👨‍💻 Developer
+
+**Baranimoorthy** — BSc. Data Science, Sathyabama Institute of Science and Technology
+
+- 🌐 [Portfolio](https://lynxofficial7777-hash.github.io)
+- 💼 [LinkedIn](https://www.linkedin.com/in/baranimoorthy77)
+- 📧 baranimoorthy77@gmail.com
+- 🐙 [GitHub](https://github.com/lynxofficial7777-hash)
+
+---
+
+<p align="center">Built with ❤️ and way too many late nights debugging MediaPipe</p>
