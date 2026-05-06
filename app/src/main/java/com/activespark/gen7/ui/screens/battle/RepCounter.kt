@@ -29,6 +29,7 @@ class RepCounter(private val exerciseType: ExerciseType) {
     private var state = RepState.IDLE
     private var repCount = 0
     private var lastFormScore = 1.0f
+    private var lastRepTime = 0L          // cooldown: prevent rapid false reps
 
     // Alternate-leg tracking (HIGH_KNEE, MOUNTAIN_CLIMBER)
     private var lastKneeSide = -1   // 0 = left, 1 = right
@@ -36,6 +37,13 @@ class RepCounter(private val exerciseType: ExerciseType) {
     // Plank hold tracking
     private var plankStartTime = 0L
     private var isInPlankPosition = false
+
+    companion object {
+        // Minimum milliseconds between two consecutive reps
+        private const val REP_COOLDOWN_MS = 800L
+        // Minimum visibility score for key landmarks — below this, skip frame
+        private const val MIN_VISIBILITY = 0.5f
+    }
 
     data class RepResult(
         val repCount: Int,
@@ -46,6 +54,15 @@ class RepCounter(private val exerciseType: ExerciseType) {
 
     fun process(landmarks: List<NormalizedLandmark>): RepResult {
         if (landmarks.size < 29) return RepResult(repCount, lastFormScore, false)
+
+        // Skip frame if key torso landmarks aren't visible enough
+        // (prevents counting reps when camera sees a wall / wrong angle)
+        val hipVis      = (landmarks[23].visibility().orElse(0f) + landmarks[24].visibility().orElse(0f)) / 2f
+        val shoulderVis = (landmarks[11].visibility().orElse(0f) + landmarks[12].visibility().orElse(0f)) / 2f
+        if (hipVis < MIN_VISIBILITY || shoulderVis < MIN_VISIBILITY) {
+            return RepResult(repCount, lastFormScore, false)
+        }
+
         val formScore = calculateFormScore(landmarks).also { lastFormScore = it }
         return when (exerciseType) {
             ExerciseType.PLANK           -> processPlank(landmarks, formScore)
@@ -61,8 +78,10 @@ class RepCounter(private val exerciseType: ExerciseType) {
 
     private fun processStandard(landmarks: List<NormalizedLandmark>, formScore: Float): RepResult {
         val measurement = getMeasurement(landmarks)
-        val repDetected = updateStateMachine(measurement)
-        if (repDetected) repCount++
+        val rawRepDetected = updateStateMachine(measurement)
+        val now = System.currentTimeMillis()
+        val repDetected = rawRepDetected && (now - lastRepTime >= REP_COOLDOWN_MS)
+        if (repDetected) { repCount++; lastRepTime = now }
         return RepResult(repCount, formScore, repDetected)
     }
 
@@ -190,7 +209,10 @@ class RepCounter(private val exerciseType: ExerciseType) {
                     landmarks[23].y() - landmarks[25].y() < extendThreshold
                 else
                     landmarks[24].y() - landmarks[26].y() < extendThreshold
-                if (lowered) { state = RepState.IDLE; repCount++; repDetected = true }
+                val now = System.currentTimeMillis()
+                if (lowered && now - lastRepTime >= REP_COOLDOWN_MS) {
+                    state = RepState.IDLE; repCount++; lastRepTime = now; repDetected = true
+                } else if (lowered) { state = RepState.IDLE }
             }
             RepState.UP -> state = RepState.IDLE
         }
